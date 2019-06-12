@@ -5,6 +5,42 @@ var nGram = require('n-gram');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
+  var AdmZip = require('adm-zip');
+  var request = require('request');
+  request.get({url:'http://www.post.japanpost.jp/zipcode/dl/kogaki/zip/ken_all.zip', encoding:null}, (err, res, body)=>{
+    let zip = new AdmZip(body);
+    let zipEntries = zip.getEntries();
+    zipEntries.forEach(zipEntry=>{
+      if(zipEntry.entryName == "KEN_ALL.CSV"){
+        //decode japanese
+        const iconv = require('iconv-lite')
+        let buf = zip.readFile(zipEntry);
+        let str = iconv.decode(buf, 'Shift-JIS');
+        //
+        const csv = require('csvtojson');
+        csv({noheader:true,output:'csv'})
+        .fromString(str)
+        .then(row=>{
+          let newArr = [];
+          row.forEach(item=>{
+            newArr.push([item[2],item[6],item[7],item[8]])
+          })
+          const {parse} = require('json2csv');
+          try{
+            const csv = parse(newArr)
+            fs.writeFile('public/files/index.txt',csv, err=>{
+              if(err) throw err;
+              console.log('write file succeed')
+            })
+          }catch(err){
+            console.error(err)
+          }
+          
+        })
+        
+      }
+    })
+  })
   res.render('index', { title: 'post info' });
 });
 //search
@@ -12,11 +48,9 @@ router.get('/search', function (req, res, next) {
   let result = [];
   //split input words
   const words = nGram(2)(req.query.keyword);
-  console.log(words);
-  const csvFilePath = 'public/files/KEN_ALL.CSV'
-  const iconv = require('iconv-lite')
+  const filePath = 'public/files/index.txt'
+  const stream = fs.createReadStream(filePath);
   let data, postArr;
-  const stream = fs.createReadStream(csvFilePath, { encoding: 'binary' });
   stream.on('error', err => {
     console.log(err)
   });
@@ -24,18 +58,8 @@ router.get('/search', function (req, res, next) {
     data += chunk;
   });
   stream.on('end', () => {
-    const buff = Buffer.from(data, 'binary');
-    //str is the string of all record
-    const str = iconv.decode(buff, 'Shift-JIS');
-    postArr = str.split(/\n/)
+    postArr = data.split(/\n/)
     postArr.forEach(item => {
-      /*let flag = true;
-      words.forEach(word => {
-        //check if each word is in the string
-        if (item.indexOf(word) < 0) {
-          flag = false;
-        }
-      })*/
       let flag = false;
       words.forEach(word=>{
         if(item.indexOf(word) >=0){
@@ -43,11 +67,11 @@ router.get('/search', function (req, res, next) {
         }
       })
       if (flag) {
-        result.push(item.split(','))
+        result.push(item)
       }
     })
     res.send({ result })
   })
 })
-//北西
+
 module.exports = router;
