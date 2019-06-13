@@ -42,7 +42,7 @@ router.get('/', function (req, res, next) {
             const { parse } = require('json2csv');
             try {
               const csv = parse(result)
-              fs.writeFile('public/files/index.txt', csv, err => {
+              fs.writeFile('public/index.txt', csv, err => {
                 if (err) throw err;
                 console.log('write file succeed')
               })
@@ -64,7 +64,8 @@ router.get('/search', function (req, res, next) {
   } else {
     words = nGram(2)(req.query.keyword);
   }
-  const filePath = 'public/files/index.txt'
+  //read index.txt file
+  const filePath = 'public/index.txt'
   const stream = fs.createReadStream(filePath);
   let data, postArr;
   stream.on('error', err => {
