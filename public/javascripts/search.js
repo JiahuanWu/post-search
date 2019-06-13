@@ -18,7 +18,7 @@ function search(){
                 $result.innerHTML = "result：";
                 json.result.forEach(item=>{
                     let liNode = document.createElement('li');
-                    liNode.innerHTML=`<li>${item[2]},${item[6]},${item[7]},${item[8]}</li>`
+                    liNode.innerHTML=`<li>${item}</li>`
                     $result.appendChild(liNode);
                 })
             }).catch(err=>{
