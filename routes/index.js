@@ -8,13 +8,15 @@ const getResult = (row) => {
   let newArr = [];
   //loop all the records
   for(let i=0;i<row.length-1;i++){
-    let lastAddress ="";
-    if(row[i][2] == row[i+1][2] && row[i][8] != row[i+1][8]){
-      //if two consecutive records has the same id but different address, then combine them and jump to the next record
-      lastAddress = row[i][8]+row[i+1][8];
-      i++;
-    }else{
-      lastAddress = row[i][8]
+    console.log(row[i])
+    let lastAddress =row[i][8];
+    for(let j=1;j<row.length-i;j++){
+      if(row[i][2] != row[i+j][2]){
+        break;
+      }else if(row[i][8] != row[i+j][8]){
+          lastAddress += row[i+j][8];
+          i++;
+      }
     }
     newArr.push([row[i][2], row[i][6], row[i][7], lastAddress])
   }
